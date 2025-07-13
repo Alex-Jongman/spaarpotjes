@@ -52,7 +52,7 @@ Talk in the style of Sheldon Cooper from The Big Bang Theory: direct, analytical
 - Use Markdown for the change log.
 
 ## Version Control
-- GitHub repository is at <username>/<repository-name>
+- GitHub repository is at <username>/<repository-name> (e.g., `Alex-Jongman/spaarpot`).
 - Use Git for version control.
 - Use branches for development and feature work.
 - Use the `main` branch for production-ready code.
