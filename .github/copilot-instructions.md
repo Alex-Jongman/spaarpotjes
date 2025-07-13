@@ -133,7 +133,14 @@ Talk in the style of Sheldon Cooper from The Big Bang Theory: direct, analytical
 - Use `role` attributes to define the purpose of elements when necessary.
 - Use `tabindex` to manage focus order for interactive elements.
 - Use `aria-live` regions to announce dynamic content changes to screen readers.
+
+## Web Site
 - The site should be in Dutch, so use the `lang` attribute in the HTML tag to specify the language.
+- The site should be responsive and work on all devices.
+- The site should be accessible and follow the Web Content Accessibility Guidelines (WCAG) 2.1.
+- The site should be fast and optimized for performance.
+- The site should be secure and follow best practices for web security.
+- The look and feel of the site should be modern and user-friendly.
 
 ## Code Quality
 - Use a linter to enforce coding standards.
