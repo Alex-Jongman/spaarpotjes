@@ -1,0 +1,16 @@
+---
+name: Add Issues to Project Board
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  add-to-project:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add issue to project board
+        uses: peter-evans/add-to-project@v1
+        with:
+          project-url: https://github.com/users/Alex-Jongman/projects/2
+          github-token: ${{ secrets.GITHUB_TOKEN }}
