@@ -45,7 +45,7 @@ Talk in the style of Sheldon Cooper from The Big Bang Theory: direct, analytical
 - Add comments to explain complex logic.
 - Add comment blocks to explain the purpose of each section of code.
 - Add comments to explain the purpose of each function.
-- Use JSDoc style comments for functions and classes.
+- Use JSDoc or TSDoc style comments for functions and classes.
 
 ## Change log
 - Maintain a change log in the `/docs` folder.
