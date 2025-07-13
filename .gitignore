@@ -1,0 +1,42 @@
+# Node
+node_modules/
+
+# Build output
+dist/
+frontend/dist/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store
+
+# OS
+Thumbs.db
+
+# Test output
+coverage/
+
+# Misc
+.env
+.env.*
+
+# Playwright
+playwright-report/
+
+# Vitest
+*.log
+
+# TypeScript
+*.tsbuildinfo
+
+# Python (for yamllint)
+__pycache__/
+*.pyc
+
+# Miscellaneous
+*.local

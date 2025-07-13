@@ -1,0 +1,23 @@
+{
+  "name": "spaarpot-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run --coverage",
+    "lint": "eslint . --ext .ts,.js"
+  },
+  "dependencies": {
+    "lit": "^3.1.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.1",
+    "eslint": "^9.31.0",
+    "lit": "^3.3.1",
+    "typescript": "^5.8.3",
+    "vite": "^7.0.4",
+    "vitest": "^3.2.4"
+  }
+}
