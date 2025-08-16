@@ -42,6 +42,9 @@ Source: [contract-list.ts](../frontend/src/components/contract-list.ts)
 	- `edit-request` — detail: `id: string` when the user clicks “Bewerken”.
 - A11y:
 	- Buttons include `aria-label` with contract name.
+ - Display logic:
+ 	- Recurring obligations are shown as a total per frequency when all share the same frequency; otherwise a normalized per-month total is shown ("Terugkerend (per maand): € …/mnd").
+ 	- Installment schedules show the total sum and the number of terms ("Termijnen: € … (n termijnen)").
 
 ## contract-edit
 
@@ -55,7 +58,8 @@ Source: [contract-edit.ts](../frontend/src/components/contract-edit.ts)
 	- `contract-save` — detail: `{ id, input: { name, accountNumber, description?, obligations?: [{ id?, label?, rate?: { amount, frequency?, schedule?, validFrom?, validTo? } }] } }`
 	- `edit-close` — emitted when dialog closes without saving
 - A11y:
-	- Uses a backdrop and card. Note: no focus trap yet; recommended follow-up to add focus management and Escape-to-close.
+	- Accessible modal with role="dialog", aria-modal, labeled by title.
+	- Keyboard: Esc closes, focus is trapped within the dialog, and initial focus is set on open.
 
 ## Types
 

@@ -45,6 +45,20 @@ class MemoryContractRepository implements ContractRepository {
             schedule: input.rate.schedule,
             frequency: input.rate.frequency,
           };
+          // Close previous open rate if overlapping/current
+          if (target.rates?.length) {
+            const prev = target.rates[target.rates.length - 1];
+            const prevOpen = !prev.validTo;
+            const newStart = Date.parse(rate.validFrom);
+            const prevStart = Date.parse(prev.validFrom);
+            if (prevOpen && isFinite(newStart) && isFinite(prevStart) && newStart >= prevStart) {
+              const end = new Date(newStart - 1);
+              prev.validTo = end.toISOString();
+            } else if (prevOpen && !input.rate.validFrom) {
+              // No explicit start for the new rate; close previous at now - 1ms
+              prev.validTo = new Date(Date.parse(now) - 1).toISOString();
+            }
+          }
           target.rates = [...(target.rates ?? []), rate];
         }
       } else {
@@ -160,6 +174,20 @@ class IDBContractRepository implements ContractRepository {
             schedule: input.rate.schedule,
             frequency: input.rate.frequency,
           };
+          // Close previous open rate if overlapping/current
+          if ((result.find(o => o.id === input.id)?.rates ?? []).length) {
+            const target = result.find(o => o.id === input.id)!;
+            const prev = target.rates[target.rates.length - 1];
+            const prevOpen = !prev.validTo;
+            const newStart = Date.parse(rate.validFrom);
+            const prevStart = Date.parse(prev.validFrom);
+            if (prevOpen && isFinite(newStart) && isFinite(prevStart) && newStart >= prevStart) {
+              const end = new Date(newStart - 1);
+              prev.validTo = end.toISOString();
+            } else if (prevOpen && !input.rate.validFrom) {
+              prev.validTo = new Date(Date.parse(now) - 1).toISOString();
+            }
+          }
           target.rates = [...(target.rates ?? []), rate];
         }
       } else {

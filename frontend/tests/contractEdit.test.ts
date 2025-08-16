@@ -37,4 +37,21 @@ describe('contract-edit', () => {
   expect(ev.detail.input.obligations?.[0].rate?.frequency).toBe('weekly');
     expect(ev.detail.input.obligations?.[0].label).toBe('Huur');
   });
+
+  it('renders an accessible dialog structure', async () => {
+    const el = document.createElement('contract-edit') as HTMLElement & { open: boolean; contract?: { id: string; name: string; accountNumber: string; createdAt: string; obligations?: { id: string; label?: string; rates?: { id: string; amount: number; validFrom: string }[] }[] } };
+    document.body.appendChild(el);
+    el.open = true;
+    el.contract = { id: '1', name: 'Huur', accountNumber: 'NL00', createdAt: new Date().toISOString(), obligations: [{ id: 'o1', label: 'Huur', rates: [{ id: 'r1', amount: 1200, validFrom: new Date().toISOString() }] }] };
+    await nextFrame();
+
+    const root = el.shadowRoot!;
+    const dialog = root.querySelector('[role="dialog"]') as HTMLElement;
+    expect(dialog).toBeTruthy();
+    expect(dialog.getAttribute('aria-modal')).toBe('true');
+    const title = root.querySelector('#edit-title');
+    expect(title?.textContent).toContain('Contract bewerken');
+    const closeBtn = root.querySelector('button[aria-label="Sluiten"]');
+    expect(closeBtn).toBeTruthy();
+  });
 });

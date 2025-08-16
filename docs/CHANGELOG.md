@@ -26,3 +26,10 @@
 - UI: Contract-formulier en bewerk-dialoog hebben een 'Frequentie' selectie; bedragen zijn niet langer per maand hardcoded.
 - Styles: Bewerk-dialoog responsive gemaakt (grid, max-width, padding) met mobile-first layout.
 - Tests: Bestaande tests blijven groen; dekking ongewijzigd. Nieuwe UI is backward-compatible.
+
+2025-08-16 - Bewerk-dialoog UI en toegankelijkheid verbeterd
+
+- UI: Bewerk-dialoog herontworpen met duidelijke header, sticky acties, betere spacing en schaduwen.
+- Toegankelijkheid: role="dialog", aria-modal, titel-koppeling en toetsenbord-navigatie (Esc om te sluiten, focus trap).
+- Codekwaliteit: Geen geneste labels meer; semantische fieldsets en labels toegevoegd.
+- Tests: Extra unit test toegevoegd voor ARIA-structuur.

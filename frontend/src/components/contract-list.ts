@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { Contract } from '../types';
+import type { Contract, PaymentRate } from '../types';
 
 @customElement('contract-list')
 export class ContractList extends LitElement {
@@ -27,22 +27,48 @@ export class ContractList extends LitElement {
               <div>
                 <div class="name">${c.name}</div>
                 <div class="meta">Rekening: ${c.accountNumber}</div>
-                ${Array.isArray(c.obligations) && c.obligations.length ? html`<div class="meta">Totaal verplichtingen: € ${c.obligations.reduce((sum, ob) => {
+                ${Array.isArray(c.obligations) && c.obligations.length ? (() => {
                   const now = Date.now();
-                  const current = (ob.rates ?? []).filter(r => (!r.validFrom || Date.parse(r.validFrom) <= now) && (!r.validTo || Date.parse(r.validTo) >= now)).slice(-1)[0];
-                  if (!current) return sum;
-                  return sum + (current.amount || 0);
-                }, 0).toFixed(2)} ${(() => {
-                  // If all current rates share the same schedule recurring frequency, display it; else omit for mixed or installments.
-                  const now = Date.now();
-                  const freqs = new Set((c.obligations ?? []).map(ob => {
-                    const cur = (ob.rates ?? []).filter(r => (!r.validFrom || Date.parse(r.validFrom) <= now) && (!r.validTo || Date.parse(r.validTo) >= now)).slice(-1)[0];
-                    if (cur?.schedule?.type === 'recurring') return cur.schedule.frequency;
-                    if (!cur?.schedule && cur?.frequency) return cur.frequency;
-                    return undefined;
-                  }).filter(Boolean) as string[]);
-                  return freqs.size === 1 ? `(${[...freqs][0]})` : '';
-                })()}</div>` : null}
+                  const currents = ((c.obligations ?? []).map(ob => (ob.rates ?? []).filter(r => (!r.validFrom || Date.parse(r.validFrom) <= now) && (!r.validTo || Date.parse(r.validTo) >= now)).slice(-1)[0]).filter(Boolean) as PaymentRate[]);
+                  type Rec = { amount: number; frequency: 'daily'|'weekly'|'biweekly'|'monthly'|'quarterly'|'yearly' };
+                  const recurring: Rec[] = [];
+                  for (const r of currents) {
+                    if (r.schedule?.type === 'recurring') {
+                      recurring.push({ amount: r.amount || 0, frequency: r.schedule.frequency });
+                    } else if (!r.schedule && r.frequency) {
+                      recurring.push({ amount: r.amount || 0, frequency: r.frequency });
+                    }
+                  }
+                  const installments = currents.flatMap(r => r.schedule?.type === 'installments' ? [{ amount: r.amount || 0, count: r.schedule.installments.length }] : []);
+
+                  const freqLabel = (f: Rec['frequency']) => ({
+                    daily: 'dag',
+                    weekly: 'week',
+                    biweekly: '2 weken',
+                    monthly: 'maand',
+                    quarterly: 'kwartaal',
+                    yearly: 'jaar',
+                  } as const)[f];
+
+                  const byFreq = new Map<Rec['frequency'], number>();
+                  for (const r of recurring) {
+                    byFreq.set(r.frequency, (byFreq.get(r.frequency) ?? 0) + r.amount);
+                  }
+                  const uniqueFreqs = [...byFreq.keys()];
+                  const recurringNode = uniqueFreqs.length > 0 ? html`
+                    ${uniqueFreqs.length === 1 ? html`
+                      <div class="meta">Doorlopend: € ${(byFreq.get(uniqueFreqs[0]) ?? 0).toFixed(2)} per ${freqLabel(uniqueFreqs[0])}</div>
+                    ` : html`
+                      <div class="meta">Doorlopend: ${uniqueFreqs.map(f => `€ ${(byFreq.get(f) ?? 0).toFixed(2)} per ${freqLabel(f)}`).join(' + ')}</div>
+                    `}
+                  ` : null;
+
+                  const installmentsNode = installments.length > 0 ? html`
+                    <div class="meta">Termijnen: € ${installments.reduce((s, i) => s + i.amount, 0).toFixed(2)} (${installments.reduce((s, i) => s + i.count, 0)} termijnen)</div>
+                  ` : null;
+
+                  return html`${recurringNode}${installmentsNode}`;
+                })() : null}
               </div>
               <div>
                 <button @click=${() => this.dispatchEvent(new CustomEvent('edit-request', { detail: c.id, bubbles: true, composed: true }))} aria-label="Bewerk ${c.name}">Bewerken</button>
