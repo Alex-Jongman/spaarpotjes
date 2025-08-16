@@ -8,6 +8,12 @@ export default defineConfig({
     headless: true,
     baseURL: 'http://localhost:5173',
   },
+  webServer: {
+    command: 'npm run dev',
+    port: 5173,
+    reuseExistingServer: !process.env.CI,
+    cwd: __dirname,
+  },
   projects: [
     {
       name: 'chromium',
