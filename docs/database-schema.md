@@ -2,6 +2,21 @@
 
 All data is stored in the browser using IndexedDB. No server-side database is used.
 
+## Object Stores
+
+```mermaid
+classDiagram
+  class Contract {
+    +string id
+    +string name
+    +string accountNumber
+    +string description
+    +string createdAt
+  }
+```
+
+- `contracts` (keyPath: `id`) stores `Contract` objects. Read/write via `contractsRepository`.
+
 ## Example Structure
 
 ```mermaid
@@ -16,3 +31,4 @@ classDiagram
 ```
 
 - Each `Spaarpotje` is a savings jar with a unique id, name, balance, and timestamps.
+- Each `Contract` represents a recurring cost or income, with basic identity and metadata.

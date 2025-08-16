@@ -27,6 +27,11 @@ G --> H
 - Alle andere stories zijn afhankelijk van het uitgebreide model.
 - Deze structuur zorgt voor een logische en efficiënte workflow.
 
+Status (2025-08-16):
+
+- #2 (Contract toevoegen): geïmplementeerd in branch `feat-3` (formulier, lijst, IndexedDB-opslag).
+- #3 (Contract bewerken): geïmplementeerd in branch `feat-3` (bewerk-dialoog en opslaan).
+
 > Voor meer details, zie de individuele issues op GitHub.
 > - [Contract toevoegen](https://github.com/vibe-coding/spaarpot/issues/2)
 > - [Contract bewerken](https://github.com/vibe-coding/spaarpot/issues/3)
