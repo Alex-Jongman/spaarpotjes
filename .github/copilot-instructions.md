@@ -170,6 +170,9 @@ Talk in the style of Sheldon Cooper from The Big Bang Theory: direct, analytical
 - `/tests` - Tests for the project.
 - `/assets` - Static assets like logos, fonts, etc.
 
+- use feature subfolders within `/frontend` and `/backend` for organizing code related to specific features.
+- use shared subfolders for code that is reused across multiple features like components, utilities, and services.
+
 ## Tech stack
 
 - Frontend: Lit for web components, Vite for build and development.
