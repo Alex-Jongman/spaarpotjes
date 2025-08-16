@@ -1,4 +1,4 @@
-import type { Contract, NewContractInput, UUID } from '../types';
+import type { Contract, NewContractInput, PaymentObligation, PaymentObligationInput, PaymentRate, UUID } from '../types';
 
 export type RepoBackend = 'auto' | 'memory' | 'idb';
 
@@ -24,12 +24,63 @@ function uuid(): UUID {
 class MemoryContractRepository implements ContractRepository {
   private store = new Map<UUID, Contract>();
 
+  private mapObligationsAppendOnly(inputs?: PaymentObligationInput[], existing?: PaymentObligation[]): PaymentObligation[] | undefined {
+    if (!inputs) return existing;
+    const now = new Date().toISOString();
+    const byId = new Map<string, PaymentObligation>();
+    existing?.forEach(o => byId.set(o.id, { ...o, rates: [...(o.rates ?? [])] }));
+    const result: PaymentObligation[] = existing ? Array.from(byId.values()) : [];
+
+    for (const input of inputs) {
+      if (input.id && byId.has(input.id)) {
+        const target = result.find(o => o.id === input.id)!;
+        if (input.label !== undefined) target.label = input.label;
+        if (input.rate) {
+          const rate: PaymentRate = {
+            id: uuid(),
+            amount: input.rate.amount,
+            validFrom: input.rate.validFrom ?? now,
+            validTo: input.rate.validTo,
+            createdAt: now,
+            schedule: input.rate.schedule,
+            frequency: input.rate.frequency,
+          };
+          // Close previous open rate if overlapping/current
+          if (target.rates?.length) {
+            const prev = target.rates[target.rates.length - 1];
+            const prevOpen = !prev.validTo;
+            const newStart = Date.parse(rate.validFrom);
+            const prevStart = Date.parse(prev.validFrom);
+            if (prevOpen && isFinite(newStart) && isFinite(prevStart) && newStart >= prevStart) {
+              const end = new Date(newStart - 1);
+              prev.validTo = end.toISOString();
+            } else if (prevOpen && !input.rate.validFrom) {
+              // No explicit start for the new rate; close previous at now - 1ms
+              prev.validTo = new Date(Date.parse(now) - 1).toISOString();
+            }
+          }
+          target.rates = [...(target.rates ?? []), rate];
+        }
+      } else {
+        const newOb: PaymentObligation = {
+          id: uuid(),
+          label: input.label,
+          createdAt: now,
+          rates: input.rate ? [{ id: uuid(), amount: input.rate.amount, validFrom: input.rate.validFrom ?? now, validTo: input.rate.validTo, createdAt: now, schedule: input.rate.schedule, frequency: input.rate.frequency }] : [],
+        };
+        result.push(newOb);
+      }
+    }
+    return result;
+  }
+
   async add(input: NewContractInput): Promise<Contract> {
     const c: Contract = {
       id: uuid(),
       name: input.name.trim(),
       accountNumber: input.accountNumber.trim(),
       description: input.description?.trim() || undefined,
+  obligations: this.mapObligationsAppendOnly(input.obligations),
       createdAt: new Date().toISOString(),
     };
     this.store.set(c.id, c);
@@ -51,7 +102,8 @@ class MemoryContractRepository implements ContractRepository {
       ...existing,
       name: input.name.trim(),
       accountNumber: input.accountNumber.trim(),
-      description: input.description?.trim() || undefined,
+  description: input.description?.trim() || undefined,
+  obligations: this.mapObligationsAppendOnly(input.obligations, existing.obligations),
     };
     this.store.set(id, updated);
     return updated;
@@ -101,12 +153,63 @@ class IDBContractRepository implements ContractRepository {
     });
   }
 
+  private mapObligationsAppendOnly(inputs?: PaymentObligationInput[], existing?: PaymentObligation[]): PaymentObligation[] | undefined {
+    if (!inputs) return existing;
+    const now = new Date().toISOString();
+    const byId = new Map<string, PaymentObligation>();
+    existing?.forEach(o => byId.set(o.id, { ...o, rates: [...(o.rates ?? [])] }));
+    const result: PaymentObligation[] = existing ? Array.from(byId.values()) : [];
+
+    for (const input of inputs) {
+      if (input.id && byId.has(input.id)) {
+        const target = result.find(o => o.id === input.id)!;
+        if (input.label !== undefined) target.label = input.label;
+        if (input.rate) {
+          const rate: PaymentRate = {
+            id: uuid(),
+            amount: input.rate.amount,
+            validFrom: input.rate.validFrom ?? now,
+            validTo: input.rate.validTo,
+            createdAt: now,
+            schedule: input.rate.schedule,
+            frequency: input.rate.frequency,
+          };
+          // Close previous open rate if overlapping/current
+          if ((result.find(o => o.id === input.id)?.rates ?? []).length) {
+            const target = result.find(o => o.id === input.id)!;
+            const prev = target.rates[target.rates.length - 1];
+            const prevOpen = !prev.validTo;
+            const newStart = Date.parse(rate.validFrom);
+            const prevStart = Date.parse(prev.validFrom);
+            if (prevOpen && isFinite(newStart) && isFinite(prevStart) && newStart >= prevStart) {
+              const end = new Date(newStart - 1);
+              prev.validTo = end.toISOString();
+            } else if (prevOpen && !input.rate.validFrom) {
+              prev.validTo = new Date(Date.parse(now) - 1).toISOString();
+            }
+          }
+          target.rates = [...(target.rates ?? []), rate];
+        }
+      } else {
+        const newOb: PaymentObligation = {
+          id: uuid(),
+          label: input.label,
+          createdAt: now,
+          rates: input.rate ? [{ id: uuid(), amount: input.rate.amount, validFrom: input.rate.validFrom ?? now, validTo: input.rate.validTo, createdAt: now, schedule: input.rate.schedule, frequency: input.rate.frequency }] : [],
+        };
+        result.push(newOb);
+      }
+    }
+    return result;
+  }
+
   async add(input: NewContractInput): Promise<Contract> {
     const c: Contract = {
       id: uuid(),
       name: input.name.trim(),
       accountNumber: input.accountNumber.trim(),
       description: input.description?.trim() || undefined,
+  obligations: this.mapObligationsAppendOnly(input.obligations),
       createdAt: new Date().toISOString(),
     };
     await this.tx<void>('readwrite', (store) => {
@@ -147,7 +250,8 @@ class IDBContractRepository implements ContractRepository {
       ...existing,
       name: input.name.trim(),
       accountNumber: input.accountNumber.trim(),
-      description: input.description?.trim() || undefined,
+  description: input.description?.trim() || undefined,
+  obligations: this.mapObligationsAppendOnly(input.obligations, existing.obligations),
     };
     await this.tx<void>('readwrite', (store) => {
       store.put(updated);

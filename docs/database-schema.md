@@ -12,6 +12,22 @@ classDiagram
     +string accountNumber
     +string description
     +string createdAt
+    +PaymentObligation[] obligations
+  }
+
+  class PaymentObligation {
+    +string id
+    +string label
+    +string createdAt
+    +PaymentRate[] rates
+  }
+
+  class PaymentRate {
+    +string id
+    +number amount
+    +string validFrom
+    +string validTo
+    +string createdAt
   }
 ```
 

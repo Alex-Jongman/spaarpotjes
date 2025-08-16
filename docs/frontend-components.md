@@ -21,8 +21,11 @@ Source: [contract-form.ts](../frontend/src/components/contract-form.ts)
 	- name: string (required)
 	- accountNumber: string (required)
 	- description: string (optional)
+	- obligations: array (optional) — minimal UI ondersteunt één verplichting (label) met nieuwe rate. Twee schema's:
+		- Terugkerend: `{ amount, frequency, schedule: { type: 'recurring', frequency } }`
+		- Termijnen: `{ amount: som van termijnen, schedule: { type: 'installments', installments: [{ date, amount }] } }`
 - Events:
-	- `contract-submit` — detail: `{ name, accountNumber, description? }`
+	- `contract-submit` — detail: `{ name, accountNumber, description?, obligations?: [{ label?, rate?: { amount, frequency?, schedule?, validFrom? } }] }`
 	- `form-error` — detail: string (validation message)
 - A11y:
 	- Semantic labels per field.
@@ -39,6 +42,9 @@ Source: [contract-list.ts](../frontend/src/components/contract-list.ts)
 	- `edit-request` — detail: `id: string` when the user clicks “Bewerken”.
 - A11y:
 	- Buttons include `aria-label` with contract name.
+ - Display logic:
+ 	- Recurring obligations are shown as a total per frequency when all share the same frequency; otherwise a normalized per-month total is shown ("Terugkerend (per maand): € …/mnd").
+ 	- Installment schedules show the total sum and the number of terms ("Termijnen: € … (n termijnen)").
 
 ## contract-edit
 
@@ -49,10 +55,11 @@ Source: [contract-edit.ts](../frontend/src/components/contract-edit.ts)
 	- `open: boolean` — controls visibility
 	- `contract?: Contract` — current contract
 - Events:
-	- `contract-save` — detail: `{ id, input: { name, accountNumber, description? } }`
+	- `contract-save` — detail: `{ id, input: { name, accountNumber, description?, obligations?: [{ id?, label?, rate?: { amount, frequency?, schedule?, validFrom?, validTo? } }] } }`
 	- `edit-close` — emitted when dialog closes without saving
 - A11y:
-	- Uses a backdrop and card. Note: no focus trap yet; recommended follow-up to add focus management and Escape-to-close.
+	- Accessible modal with role="dialog", aria-modal, labeled by title.
+	- Keyboard: Esc closes, focus is trapped within the dialog, and initial focus is set on open.
 
 ## Types
 
@@ -66,6 +73,7 @@ interface Contract {
 	name: string;
 	accountNumber: string;
 	description?: string;
+	obligations?: { id: string; label?: string; createdAt: string; rates: { id: string; amount: number; frequency?: 'daily'|'weekly'|'biweekly'|'monthly'|'quarterly'|'yearly'; schedule?: { type: 'recurring', frequency: 'daily'|'weekly'|'biweekly'|'monthly'|'quarterly'|'yearly' } | { type: 'installments', installments: { date: string; amount: number }[] }; validFrom: string; validTo?: string; createdAt: string }[] }[];
 	createdAt: string; // ISO
 }
 ```

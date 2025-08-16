@@ -27,6 +27,7 @@ coverage/
 
 # Playwright
 playwright-report/
+frontend/test-results/
 
 # Vitest
 *.log
