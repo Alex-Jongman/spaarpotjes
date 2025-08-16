@@ -8,3 +8,7 @@
 - Feature: Contract bewerken (issue #3) met bewerk-dialoog en opslag via repository.update.
 - Tests: Vitest unit/integratie tests toegevoegd voor opslag, formulier, bewerken en app flow.
 - Tooling: ESLint flat config verbeterd, decorators ingeschakeld, build en lint in CI-klaar staat.
+
+2025-08-16 - Documentatie: component-links
+
+- Docs: In `docs/frontend-components.md` per component een link toegevoegd naar het bijbehorende bronbestand. Markdown-indents gecorrigeerd.
