@@ -7,6 +7,8 @@ export interface Contract {
   name: string;
   accountNumber: string; // IBAN or other
   description?: string;
+  // Payment obligations associated with this contract (append-only rates)
+  obligations?: PaymentObligation[];
   createdAt: string; // ISO string
 }
 
@@ -14,4 +16,44 @@ export interface NewContractInput {
   name: string;
   accountNumber: string;
   description?: string;
+  // Provide zero or more obligations when creating or updating
+  obligations?: PaymentObligationInput[];
 }
+
+export interface PaymentRate {
+  id: UUID;
+  amount: number; // EUR amount for the obligation
+  validFrom: string; // ISO timestamp
+  validTo?: string; // ISO timestamp
+  createdAt: string; // ISO timestamp
+  frequency?: PaymentFrequency; // how often this amount recurs
+}
+
+export interface PaymentObligation {
+  id: UUID;
+  label?: string;
+  createdAt: string; // ISO timestamp
+  rates: PaymentRate[];
+}
+
+export interface PaymentRateInput {
+  id?: UUID; // if provided, may target an existing rate (not typical in append-only)
+  amount: number;
+  validFrom?: string; // default: now
+  validTo?: string;   // usually omitted for current rate
+  frequency?: PaymentFrequency;
+}
+
+export interface PaymentObligationInput {
+  id?: UUID; // present when updating an existing obligation
+  label?: string;
+  rate?: PaymentRateInput; // provide one new rate per update/create
+}
+
+export type PaymentFrequency =
+  | 'daily'
+  | 'weekly'
+  | 'biweekly'
+  | 'monthly'
+  | 'quarterly'
+  | 'yearly';

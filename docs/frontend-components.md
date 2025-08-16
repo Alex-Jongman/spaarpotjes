@@ -21,8 +21,9 @@ Source: [contract-form.ts](../frontend/src/components/contract-form.ts)
 	- name: string (required)
 	- accountNumber: string (required)
 	- description: string (optional)
+	- obligations: array (optional) — minimal UI ondersteunt één verplichting (label) met nieuwe rate `{ amount, frequency, validFrom? }`
 - Events:
-	- `contract-submit` — detail: `{ name, accountNumber, description? }`
+	- `contract-submit` — detail: `{ name, accountNumber, description?, obligations?: [{ label?, rate?: { amount, frequency, validFrom? } }] }`
 	- `form-error` — detail: string (validation message)
 - A11y:
 	- Semantic labels per field.
@@ -49,7 +50,7 @@ Source: [contract-edit.ts](../frontend/src/components/contract-edit.ts)
 	- `open: boolean` — controls visibility
 	- `contract?: Contract` — current contract
 - Events:
-	- `contract-save` — detail: `{ id, input: { name, accountNumber, description? } }`
+	- `contract-save` — detail: `{ id, input: { name, accountNumber, description?, obligations?: [{ id?, label?, rate?: { amount, frequency, validFrom?, validTo? } }] } }`
 	- `edit-close` — emitted when dialog closes without saving
 - A11y:
 	- Uses a backdrop and card. Note: no focus trap yet; recommended follow-up to add focus management and Escape-to-close.
@@ -66,6 +67,7 @@ interface Contract {
 	name: string;
 	accountNumber: string;
 	description?: string;
+	obligations?: { id: string; label?: string; createdAt: string; rates: { id: string; amount: number; frequency?: 'daily'|'weekly'|'biweekly'|'monthly'|'quarterly'|'yearly'; validFrom: string; validTo?: string; createdAt: string }[] }[];
 	createdAt: string; // ISO
 }
 ```

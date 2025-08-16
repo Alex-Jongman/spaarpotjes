@@ -12,3 +12,17 @@
 2025-08-16 - Documentatie: component-links
 
 - Docs: In `docs/frontend-components.md` per component een link toegevoegd naar het bijbehorende bronbestand. Markdown-indents gecorrigeerd.
+
+2025-08-16 - Kosten van contract aanpassen (User Story #8)
+
+- Feature: Bedrag (amount) veld toegevoegd aan contracten (types, repository, UI).
+- UI: Formulier en bewerk-dialoog ondersteunen bedrag invoeren/wijzigen; lijst toont bedrag in euro's.
+- Opslag: Memory en IndexedDB repository slaan amount op en werken het bij.
+- Tests: Unit tests uitgebreid voor form submit (amount) en repository update.
+
+2025-08-16 - Frequentie per verplichting (issue #5) en mobile-first UI
+
+- Feature: PaymentFrequency toegevoegd aan PaymentRate (types) met opties daily/weekly/biweekly/monthly/quarterly/yearly.
+- UI: Contract-formulier en bewerk-dialoog hebben een 'Frequentie' selectie; bedragen zijn niet langer per maand hardcoded.
+- Styles: Bewerk-dialoog responsive gemaakt (grid, max-width, padding) met mobile-first layout.
+- Tests: Bestaande tests blijven groen; dekking ongewijzigd. Nieuwe UI is backward-compatible.

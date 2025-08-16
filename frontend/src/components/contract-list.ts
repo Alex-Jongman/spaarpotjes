@@ -27,6 +27,16 @@ export class ContractList extends LitElement {
               <div>
                 <div class="name">${c.name}</div>
                 <div class="meta">Rekening: ${c.accountNumber}</div>
+                ${Array.isArray(c.obligations) && c.obligations.length ? html`<div class="meta">Totaal verplichtingen: € ${c.obligations.reduce((sum, ob) => {
+                  const now = Date.now();
+                  const current = (ob.rates ?? []).filter(r => (!r.validFrom || Date.parse(r.validFrom) <= now) && (!r.validTo || Date.parse(r.validTo) >= now)).slice(-1)[0];
+                  return sum + (current ? current.amount : 0);
+                }, 0).toFixed(2)} ${(() => {
+                  // If all current rates share the same frequency, display it; else omit.
+                  const now = Date.now();
+                  const freqs = new Set((c.obligations ?? []).map(ob => (ob.rates ?? []).filter(r => (!r.validFrom || Date.parse(r.validFrom) <= now) && (!r.validTo || Date.parse(r.validTo) >= now)).slice(-1)[0]?.frequency ?? 'monthly'));
+                  return freqs.size === 1 ? `(${[...freqs][0]})` : '';
+                })()}</div>` : null}
               </div>
               <div>
                 <button @click=${() => this.dispatchEvent(new CustomEvent('edit-request', { detail: c.id, bubbles: true, composed: true }))} aria-label="Bewerk ${c.name}">Bewerken</button>
