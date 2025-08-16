@@ -2,6 +2,7 @@
   "name": "spaarpot-frontend",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -14,8 +15,12 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.54.1",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "@vitest/coverage-v8": "^3.2.4",
     "eslint": "^9.31.0",
-    "lit": "^3.3.1",
+    "globals": "^15.14.0",
+    "jsdom": "^26.1.0",
     "typescript": "^5.8.3",
     "vite": "^7.0.4",
     "vitest": "^3.2.4"

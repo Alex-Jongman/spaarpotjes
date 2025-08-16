@@ -270,3 +270,32 @@ Talk in the style of Sheldon Cooper from The Big Bang Theory: direct, analytical
 - Use yamllint to validate all YAML files, especially GitHub Actions workflows and CI/CD configuration files.
 - Fix all errors and warnings reported by yamllint before committing YAML files.
 - Ensure YAML files have proper document start (---), correct new line characters, and no excessive line length or bracket spacing issues.
+
+## Naming Conventions
+
+- Language
+  - Use English for all file and folder names, classes, interfaces, types, variables, functions, and methods.
+  - User-facing text remains in Dutch via i18n; code identifiers remain English.
+
+- Files and Folders
+  - kebab-case (e.g., savings-repository.ts, savings-widget, shared-lib)
+
+- Classes, Components, Types, Interfaces
+  - PascalCase (e.g., SavingsRepository, SavingsWidget, Savings, SavingsId)
+
+- Variables, Functions, Methods, Parameters
+  - camelCase (e.g., createSavingsStore, currentBalance, handleSubmit)
+
+- Constants and Enum Members
+  - UPPER_SNAKE_CASE (e.g., DEFAULT_DB_NAME, MAX_ITEMS)
+
+- Custom Elements (Web Components)
+  - Tag names: lowercase kebab-case with project prefix sp- (e.g., sp-button, sp-savings-widget)
+  - Class names: PascalCase (e.g., class SavingsWidget extends LitElement)
+
+- Tests and Stories
+  - <basename>.test.ts, <basename>.spec.ts, <basename>.stories.ts
+
+- General
+  - Avoid non-standard abbreviations; prefer clarity (id and URL are acceptable).
+  - Use domain-accurate terms; do not mix Dutch in identifiers or filenames.

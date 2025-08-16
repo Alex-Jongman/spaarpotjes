@@ -1,2 +1,2 @@
-// Entry point for Spaarpot frontend
-import './components/SpaarpotApp.ts';
+import './src/app-root';
+document.body.innerHTML = '<app-root></app-root>';
