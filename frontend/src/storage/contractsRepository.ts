@@ -42,6 +42,8 @@ class MemoryContractRepository implements ContractRepository {
             validFrom: input.rate.validFrom ?? now,
             validTo: input.rate.validTo,
             createdAt: now,
+            schedule: input.rate.schedule,
+            frequency: input.rate.frequency,
           };
           target.rates = [...(target.rates ?? []), rate];
         }
@@ -50,7 +52,7 @@ class MemoryContractRepository implements ContractRepository {
           id: uuid(),
           label: input.label,
           createdAt: now,
-          rates: input.rate ? [{ id: uuid(), amount: input.rate.amount, validFrom: input.rate.validFrom ?? now, validTo: input.rate.validTo, createdAt: now }] : [],
+          rates: input.rate ? [{ id: uuid(), amount: input.rate.amount, validFrom: input.rate.validFrom ?? now, validTo: input.rate.validTo, createdAt: now, schedule: input.rate.schedule, frequency: input.rate.frequency }] : [],
         };
         result.push(newOb);
       }
@@ -155,6 +157,8 @@ class IDBContractRepository implements ContractRepository {
             validFrom: input.rate.validFrom ?? now,
             validTo: input.rate.validTo,
             createdAt: now,
+            schedule: input.rate.schedule,
+            frequency: input.rate.frequency,
           };
           target.rates = [...(target.rates ?? []), rate];
         }
@@ -163,7 +167,7 @@ class IDBContractRepository implements ContractRepository {
           id: uuid(),
           label: input.label,
           createdAt: now,
-          rates: input.rate ? [{ id: uuid(), amount: input.rate.amount, validFrom: input.rate.validFrom ?? now, validTo: input.rate.validTo, createdAt: now }] : [],
+          rates: input.rate ? [{ id: uuid(), amount: input.rate.amount, validFrom: input.rate.validFrom ?? now, validTo: input.rate.validTo, createdAt: now, schedule: input.rate.schedule, frequency: input.rate.frequency }] : [],
         };
         result.push(newOb);
       }

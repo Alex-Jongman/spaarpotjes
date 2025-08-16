@@ -22,11 +22,13 @@ export interface NewContractInput {
 
 export interface PaymentRate {
   id: UUID;
-  amount: number; // EUR amount for the obligation
+  amount: number; // EUR amount; for recurring it's per period, for installments it's the sum of all installments
   validFrom: string; // ISO timestamp
   validTo?: string; // ISO timestamp
   createdAt: string; // ISO timestamp
-  frequency?: PaymentFrequency; // how often this amount recurs
+  // Preferred scheduling model. If omitted, legacy `frequency` may be used.
+  schedule?: PaymentSchedule;
+  frequency?: PaymentFrequency; // legacy: how often this amount recurs
 }
 
 export interface PaymentObligation {
@@ -41,6 +43,8 @@ export interface PaymentRateInput {
   amount: number;
   validFrom?: string; // default: now
   validTo?: string;   // usually omitted for current rate
+  // Preferred: provide a schedule. If omitted, `frequency` may be used for recurring.
+  schedule?: PaymentScheduleInput;
   frequency?: PaymentFrequency;
 }
 
@@ -57,3 +61,26 @@ export type PaymentFrequency =
   | 'monthly'
   | 'quarterly'
   | 'yearly';
+
+// Scheduling
+export interface RecurringSchedule {
+  type: 'recurring';
+  frequency: PaymentFrequency;
+}
+
+export interface InstallmentTerm {
+  id?: UUID;
+  date: string; // ISO date (YYYY-MM-DD) or full timestamp
+  amount: number; // EUR amount for this term
+}
+
+export interface InstallmentsSchedule {
+  type: 'installments';
+  installments: InstallmentTerm[]; // explicit schedule
+}
+
+export type PaymentSchedule = RecurringSchedule | InstallmentsSchedule;
+
+export type PaymentScheduleInput =
+  | { type: 'recurring'; frequency: PaymentFrequency }
+  | { type: 'installments'; installments: { date: string; amount: number }[] };

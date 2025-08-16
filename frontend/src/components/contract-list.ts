@@ -30,11 +30,17 @@ export class ContractList extends LitElement {
                 ${Array.isArray(c.obligations) && c.obligations.length ? html`<div class="meta">Totaal verplichtingen: € ${c.obligations.reduce((sum, ob) => {
                   const now = Date.now();
                   const current = (ob.rates ?? []).filter(r => (!r.validFrom || Date.parse(r.validFrom) <= now) && (!r.validTo || Date.parse(r.validTo) >= now)).slice(-1)[0];
-                  return sum + (current ? current.amount : 0);
+                  if (!current) return sum;
+                  return sum + (current.amount || 0);
                 }, 0).toFixed(2)} ${(() => {
-                  // If all current rates share the same frequency, display it; else omit.
+                  // If all current rates share the same schedule recurring frequency, display it; else omit for mixed or installments.
                   const now = Date.now();
-                  const freqs = new Set((c.obligations ?? []).map(ob => (ob.rates ?? []).filter(r => (!r.validFrom || Date.parse(r.validFrom) <= now) && (!r.validTo || Date.parse(r.validTo) >= now)).slice(-1)[0]?.frequency ?? 'monthly'));
+                  const freqs = new Set((c.obligations ?? []).map(ob => {
+                    const cur = (ob.rates ?? []).filter(r => (!r.validFrom || Date.parse(r.validFrom) <= now) && (!r.validTo || Date.parse(r.validTo) >= now)).slice(-1)[0];
+                    if (cur?.schedule?.type === 'recurring') return cur.schedule.frequency;
+                    if (!cur?.schedule && cur?.frequency) return cur.frequency;
+                    return undefined;
+                  }).filter(Boolean) as string[]);
                   return freqs.size === 1 ? `(${[...freqs][0]})` : '';
                 })()}</div>` : null}
               </div>
