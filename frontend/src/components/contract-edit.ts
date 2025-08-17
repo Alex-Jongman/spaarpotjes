@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import type { Contract, NewContractInput, PaymentFrequency, PaymentRateInput } from '../types';
+import type { Contract, NewContractInput, PaymentFrequency, PaymentRateInput, PaymentObligation, InstallmentsSchedule } from '../types';
 
 @customElement('contract-edit')
 export class ContractEdit extends LitElement {
@@ -25,6 +25,10 @@ export class ContractEdit extends LitElement {
   .icon:hover { background: #f3f3f3; }
   .meta { display: flex; align-items: flex-start; gap: .5rem; flex-direction: column; }
   .meta .btn { align-self: start; }
+  .summary { padding: .75rem; border: 1px dashed #dcdcdc; border-radius: 8px; background: #fafafa; font-size: .95rem; }
+  .summary h3 { margin: 0 0 .5rem; font-size: 1rem; }
+  .summary dl { display: grid; grid-template-columns: auto 1fr; gap: .25rem .75rem; margin: 0; }
+  .muted { color: #666; }
   `;
 
   @property({ type: Object }) contract?: Contract;
@@ -42,6 +46,26 @@ export class ContractEdit extends LitElement {
   @state() private obligationLabel: string = '';
   @state() private targetObligationId: string | null = null;
   @state() private isCreatingNewObligation = false;
+
+  private updateFieldsFromObligation(ob?: PaymentObligation) {
+    const now = Date.now();
+    const current = ob?.rates?.filter(r => (!r.validFrom || Date.parse(r.validFrom) <= now) && (!r.validTo || Date.parse(r.validTo) >= now)).slice(-1)[0];
+    this.obligationLabel = ob?.label ?? '';
+    if (current?.schedule?.type === 'installments') {
+      this.scheduleType = 'installments';
+      const ins = (current.schedule as InstallmentsSchedule).installments ?? [];
+      this.termsCount = String(ins.length);
+      this.installments = ins.map(i => ({ date: i.date, amount: String(i.amount) }));
+      this.validFromDate = current.validFrom ? current.validFrom.slice(0, 10) : '';
+      this.amount = String(current.amount ?? '');
+    } else {
+      this.scheduleType = 'recurring';
+      const freq = (current?.schedule?.type === 'recurring' ? current.schedule.frequency : (current?.frequency ?? 'monthly')) as PaymentFrequency;
+      this.frequency = freq;
+      this.validFromDate = current?.validFrom ? current.validFrom.slice(0, 10) : '';
+      this.amount = current ? String(current.amount) : '';
+    }
+  }
 
   private handleKeydown = (e: KeyboardEvent) => {
     if (e.key === 'Escape') { e.stopPropagation(); this.close(); return; }
@@ -66,28 +90,20 @@ export class ContractEdit extends LitElement {
   };
 
   updated(changed: Map<string, unknown>) {
-  if (changed.has('contract') && this.contract) {
+    if (changed.has('contract') && this.contract) {
       this.name = this.contract.name;
       this.accountNumber = this.contract.accountNumber;
       this.description = this.contract.description ?? '';
   const first = this.contract.obligations?.[0];
-  const now = Date.now();
-  const current = first?.rates?.filter(r => (!r.validFrom || Date.parse(r.validFrom) <= now) && (!r.validTo || Date.parse(r.validTo) >= now)).slice(-1)[0];
-  this.amount = current ? String(current.amount) : '';
-  if (current?.schedule?.type === 'installments') {
-    this.scheduleType = 'installments';
-    const ins = current.schedule.installments ?? [];
-    this.termsCount = String(ins.length);
-    this.installments = ins.map(i => ({ date: i.date, amount: String(i.amount) }));
-    this.validFromDate = current.validFrom ? current.validFrom.slice(0, 10) : '';
-  } else {
-    this.scheduleType = 'recurring';
-    this.frequency = (current?.schedule?.type === 'recurring' ? current.schedule.frequency : (current?.frequency ?? 'monthly')) as PaymentFrequency;
-    this.validFromDate = current?.validFrom ? current.validFrom.slice(0, 10) : '';
-  }
-  this.obligationLabel = first?.label ?? '';
   this.targetObligationId = first?.id ?? null;
-  this.isCreatingNewObligation = !first?.id; 
+  this.isCreatingNewObligation = false;
+  this.updateFieldsFromObligation(first);
+    }
+    if (changed.has('targetObligationId')) {
+      if (!this.isCreatingNewObligation) {
+        const ob = (this.contract?.obligations ?? []).find(o => o.id === this.targetObligationId) ?? null;
+        this.updateFieldsFromObligation(ob ?? undefined);
+      }
     }
     if (changed.has('open') && this.open) {
       // Move focus into dialog when opened
@@ -170,16 +186,6 @@ export class ContractEdit extends LitElement {
                   </label>
                 </div>
                 <div class="grid cols-2">
-                  <label for="validFrom">
-                    Ingangsdatum tarief
-                    <input id="validFrom" name="validFrom" type="date" .value=${this.validFromDate} @input=${(e: InputEvent) => (this.validFromDate = (e.target as HTMLInputElement).value)} />
-                  </label>
-                  <label for="obligationLabel">
-                    Omschrijving verplichting
-                    <input id="obligationLabel" name="obligationLabel" .value=${this.obligationLabel} @input=${(e: InputEvent) => (this.obligationLabel = (e.target as HTMLInputElement).value)} />
-                  </label>
-                </div>
-                <div class="grid cols-2">
                   <label for="targetObligation">
                     Bestaande verplichting
                     <select
@@ -198,10 +204,32 @@ export class ContractEdit extends LitElement {
                     </select>
                   </label>
                   <div class="meta" aria-live="polite">
-                    <button type="button" class="btn" @click=${() => { this.isCreatingNewObligation = true; this.targetObligationId = null; }}>Nieuwe verplichting</button>
+                    <button type="button" class="btn" @click=${() => { this.isCreatingNewObligation = true; this.targetObligationId = null; this.obligationLabel = ''; }}>Nieuwe verplichting</button>
                     <span style="display:block; margin-top:.35rem;">Gebruik dit bij prijswijziging of gewijzigde voorwaarden.</span>
                   </div>
                 </div>
+                ${this.targetObligationId && !this.isCreatingNewObligation ? html`
+                  <div class="summary" aria-live="polite">
+                    <h3>Huidige verplichting</h3>
+                    ${(() => {
+                      const ob = (this.contract?.obligations ?? []).find(o => o.id === this.targetObligationId);
+                      if (!ob) return html`<div class="muted">Geen selectie</div>`;
+                      const now = Date.now();
+                      const current = ob.rates?.filter(r => (!r.validFrom || Date.parse(r.validFrom) <= now) && (!r.validTo || Date.parse(r.validTo) >= now)).slice(-1)[0];
+                      const schedule = current?.schedule?.type === 'installments'
+                        ? `Termijnen: ${(current.schedule.installments ?? []).length}`
+                        : `Frequentie: ${current?.schedule?.frequency ?? current?.frequency ?? '—'}`;
+                      return html`
+                        <dl>
+                          <dt>Label</dt><dd>${ob.label ?? '(zonder label)'}</dd>
+                          <dt>Bedrag</dt><dd>€ ${current?.amount ?? '—'}</dd>
+                          <dt>Schema</dt><dd>${schedule}</dd>
+                          <dt>Geldig vanaf</dt><dd>${current?.validFrom ? current.validFrom.slice(0,10) : '—'}</dd>
+                          <dt>Geldig t/m</dt><dd>${current?.validTo ? current.validTo.slice(0,10) : '—'}</dd>
+                        </dl>`;
+                    })()}
+                  </div>
+                ` : null}
                 <label for="description">
                   Omschrijving
                   <textarea id="description" name="description" .value=${this.description} @input=${(e: InputEvent) => (this.description = (e.target as HTMLTextAreaElement).value)} rows="3"></textarea>
@@ -209,7 +237,30 @@ export class ContractEdit extends LitElement {
               </fieldset>
 
               <fieldset>
-                <legend>Betaling</legend>
+                <legend>${this.isCreatingNewObligation ? 'Nieuwe verplichting' : 'Nieuw tarief'}</legend>
+                ${this.isCreatingNewObligation ? html`
+                  <div class="grid cols-2">
+                    <label for="obligationLabel">
+                      Omschrijving verplichting
+                      <input id="obligationLabel" name="obligationLabel" .value=${this.obligationLabel} @input=${(e: InputEvent) => (this.obligationLabel = (e.target as HTMLInputElement).value)} />
+                    </label>
+                    <label for="validFrom">
+                      Ingangsdatum tarief
+                      <input id="validFrom" name="validFrom" type="date" .value=${this.validFromDate} @input=${(e: InputEvent) => (this.validFromDate = (e.target as HTMLInputElement).value)} />
+                    </label>
+                  </div>
+                ` : html`
+                  <div class="grid cols-2">
+                    <label for="obligationLabel">
+                      Omschrijving verplichting
+                      <input id="obligationLabel" name="obligationLabel" .value=${this.obligationLabel} disabled />
+                    </label>
+                    <label for="validFrom">
+                      Ingangsdatum nieuw tarief
+                      <input id="validFrom" name="validFrom" type="date" .value=${this.validFromDate} @input=${(e: InputEvent) => (this.validFromDate = (e.target as HTMLInputElement).value)} />
+                    </label>
+                  </div>
+                `}
                 <div class="grid cols-2">
                   <label for="scheduleType">
                     Schema
