@@ -38,6 +38,7 @@ export class ContractEdit extends LitElement {
   @state() private termsCount: string = '0';
   @state() private installments: { date: string; amount: string }[] = [];
   @state() private obligationLabel: string = '';
+  @state() private targetObligation: 'new' | string = 'new';
 
   private handleKeydown = (e: KeyboardEvent) => {
     if (e.key === 'Escape') { e.stopPropagation(); this.close(); return; }
@@ -82,6 +83,7 @@ export class ContractEdit extends LitElement {
     this.validFromDate = current?.validFrom ? current.validFrom.slice(0, 10) : '';
   }
   this.obligationLabel = first?.label ?? '';
+  this.targetObligation = (first?.id ?? 'new') as 'new' | string;
     }
     if (changed.has('open') && this.open) {
       // Move focus into dialog when opened
@@ -122,7 +124,7 @@ export class ContractEdit extends LitElement {
       accountNumber: this.accountNumber.trim(),
       description: this.description.trim() || undefined,
       obligations: rate ? [{
-        id: this.contract.obligations?.[0]?.id, // append rate to first obligation if exists
+        id: this.targetObligation === 'new' ? undefined : this.targetObligation,
         label: this.obligationLabel.trim() || undefined,
         rate,
       }] : [],
@@ -172,6 +174,16 @@ export class ContractEdit extends LitElement {
                     Omschrijving verplichting
                     <input id="obligationLabel" name="obligationLabel" .value=${this.obligationLabel} @input=${(e: InputEvent) => (this.obligationLabel = (e.target as HTMLInputElement).value)} />
                   </label>
+                </div>
+                <div class="grid cols-2">
+                  <label for="targetObligation">
+                    Verplichting doel
+                    <select id="targetObligation" name="targetObligation" .value=${this.targetObligation} @change=${(e: Event) => (this.targetObligation = (e.target as HTMLSelectElement).value as 'new' | string)}>
+                      <option value="new">Nieuwe verplichting aanmaken</option>
+                      ${(this.contract?.obligations ?? []).map(o => html`<option value=${o.id}>Bestaand: ${o.label ?? '(zonder label)'}</option>`)}
+                    </select>
+                  </label>
+                  <div class="meta" aria-live="polite">Tip: kies "Nieuwe verplichting" bij prijsverhoging met gewijzigde condities.</div>
                 </div>
                 <label for="description">
                   Omschrijving
