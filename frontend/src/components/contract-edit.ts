@@ -23,6 +23,8 @@ export class ContractEdit extends LitElement {
   .btn.primary { background: #0d6efd; border-color: #0d6efd; color: #fff; }
   .icon { background: transparent; border: none; cursor: pointer; font-size: 1.3rem; width: 2rem; height: 2rem; border-radius: 6px; }
   .icon:hover { background: #f3f3f3; }
+  .meta { display: flex; align-items: flex-start; gap: .5rem; flex-direction: column; }
+  .meta .btn { align-self: start; }
   `;
 
   @property({ type: Object }) contract?: Contract;
@@ -38,7 +40,8 @@ export class ContractEdit extends LitElement {
   @state() private termsCount: string = '0';
   @state() private installments: { date: string; amount: string }[] = [];
   @state() private obligationLabel: string = '';
-  @state() private targetObligation: 'new' | string = 'new';
+  @state() private targetObligationId: string | null = null;
+  @state() private isCreatingNewObligation = false;
 
   private handleKeydown = (e: KeyboardEvent) => {
     if (e.key === 'Escape') { e.stopPropagation(); this.close(); return; }
@@ -63,7 +66,7 @@ export class ContractEdit extends LitElement {
   };
 
   updated(changed: Map<string, unknown>) {
-    if (changed.has('contract') && this.contract) {
+  if (changed.has('contract') && this.contract) {
       this.name = this.contract.name;
       this.accountNumber = this.contract.accountNumber;
       this.description = this.contract.description ?? '';
@@ -83,7 +86,8 @@ export class ContractEdit extends LitElement {
     this.validFromDate = current?.validFrom ? current.validFrom.slice(0, 10) : '';
   }
   this.obligationLabel = first?.label ?? '';
-  this.targetObligation = (first?.id ?? 'new') as 'new' | string;
+  this.targetObligationId = first?.id ?? null;
+  this.isCreatingNewObligation = !first?.id; 
     }
     if (changed.has('open') && this.open) {
       // Move focus into dialog when opened
@@ -124,7 +128,7 @@ export class ContractEdit extends LitElement {
       accountNumber: this.accountNumber.trim(),
       description: this.description.trim() || undefined,
       obligations: rate ? [{
-        id: this.targetObligation === 'new' ? undefined : this.targetObligation,
+        id: this.isCreatingNewObligation ? undefined : this.targetObligationId ?? undefined,
         label: this.obligationLabel.trim() || undefined,
         rate,
       }] : [],
@@ -177,13 +181,26 @@ export class ContractEdit extends LitElement {
                 </div>
                 <div class="grid cols-2">
                   <label for="targetObligation">
-                    Verplichting doel
-                    <select id="targetObligation" name="targetObligation" .value=${this.targetObligation} @change=${(e: Event) => (this.targetObligation = (e.target as HTMLSelectElement).value as 'new' | string)}>
-                      <option value="new">Nieuwe verplichting aanmaken</option>
-                      ${(this.contract?.obligations ?? []).map(o => html`<option value=${o.id}>Bestaand: ${o.label ?? '(zonder label)'}</option>`)}
+                    Bestaande verplichting
+                    <select
+                      id="targetObligation"
+                      name="targetObligation"
+                      .value=${this.targetObligationId ?? ''}
+                      ?disabled=${this.isCreatingNewObligation}
+                      @change=${(e: Event) => {
+                        const v = (e.target as HTMLSelectElement).value;
+                        this.targetObligationId = v || null;
+                        this.isCreatingNewObligation = false;
+                      }}
+                    >
+                      <option value="">— Selecteer verplichting —</option>
+                      ${(this.contract?.obligations ?? []).map(o => html`<option value=${o.id}>${o.label ?? '(zonder label)'}</option>`)}
                     </select>
                   </label>
-                  <div class="meta" aria-live="polite">Tip: kies "Nieuwe verplichting" bij prijsverhoging met gewijzigde condities.</div>
+                  <div class="meta" aria-live="polite">
+                    <button type="button" class="btn" @click=${() => { this.isCreatingNewObligation = true; this.targetObligationId = null; }}>Nieuwe verplichting</button>
+                    <span style="display:block; margin-top:.35rem;">Gebruik dit bij prijswijziging of gewijzigde voorwaarden.</span>
+                  </div>
                 </div>
                 <label for="description">
                   Omschrijving
